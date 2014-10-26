@@ -3,15 +3,23 @@ Version: 0.0.1
 Description: Yet an other Scheme compilier
 Synopsis: yasc file
 License: MIT
+License-file: License.txt
 Author: Axel Viala
 Copyright: (c) 2014-2014 Axel Viala
 Category: Development
 Maintainer: axel (dot) viala (At) darnuria (doteuh) eu
+homepage: https://github.com/darnuria/yasc
+bug-reports: https://github.com/darnuria/yasc/issues
 Build-type: Simple
 Cabal-version: >= 1.15
+
+source-repository head
+  type:git
+  location: https//github.com/darnuria/yasc/
+
 Executable yasc
-    Default-Language: Haskell2010
-    Main-is: Main.hs
-    Build-depends: base >= 4 && < 5,
-                   parsec >= 3.1.7 && < 3.2,
-                   mtl >= 2.1.2 && < 3
+  Default-Language: Haskell2010
+  Main-is: Main.hs
+  Build-depends: base >= 4 && < 5,
+                 parsec >= 3.1.7 && < 3.2,
+                 mtl >= 2.1.2 && < 3
