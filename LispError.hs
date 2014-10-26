@@ -1,10 +1,14 @@
 module LispError (
+  LispError(NumArgs, TypeMismatch, Parser, BadSpecialForm,
+           NotFunction, UnboundVar, Default),
   ThrowsError,
+  extractValue,
   trapError
   ) where
 
 import Control.Monad.Error
 import Text.ParserCombinators.Parsec
+import Utils
 import LispValue
 
 data LispError = NumArgs Integer [LispVal]
@@ -35,6 +39,6 @@ instance Error LispError where
 trapError :: (Show e, MonadError e m) => m String -> m String
 trapError action = catchError action (return . show)
 
-extracValue :: ThrowsError a -> a
-extracValue (Right val) = val
+extractValue :: ThrowsError a -> a
+extractValue (Right val) = val
 

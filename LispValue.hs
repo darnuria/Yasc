@@ -1,9 +1,8 @@
 module LispValue (
   LispVal(Atom, List, DottedList, Number, String, Bool),
-  unpackNumber,
-  unwordsList
   ) where
 
+import Utils
 
 data LispVal = Atom String
              | List [LispVal]
@@ -22,15 +21,4 @@ instance Show LispVal where
   show (DottedList headList tailList) = let elem1 = unwordsList headList
                                             elem2 = show tailList
                                         in "(" ++ elem1 ++ " . " ++ elem2 ++ ")"
-unpackNumber :: LispVal -> Integer
-unpackNumber (Number n) = n
-unpackNumber (String n) =
-  let parsed = read n :: [(Integer, String)] in
-    if null parsed
-      then 0
-      else fst (head parsed)
-unpackNumber (List [n]) = unpackNumber n
-unpackNumber _ = 0
 
-unwordsList :: [LispVal] -> String
-unwordsList = unwords . map show
