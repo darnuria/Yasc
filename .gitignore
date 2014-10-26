@@ -1,0 +1,4 @@
+./yasc
+*.o
+*.hi
+dist/
