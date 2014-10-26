@@ -1,4 +1,13 @@
-./yasc
+dist
+cabal-dev
 *.o
 *.hi
-dist/
+*.chi
+*.chs.h
+.virtualenv
+.hsenv
+.cabal-sandbox/
+cabal.sandbox.config
+cabal.config
+
+./yasc
