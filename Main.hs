@@ -10,5 +10,5 @@ import Control.Monad
 main :: IO ()
 main = do
   args <- getArgs
-  evaluated <- return (liftM show (readExpr (head args) >>= evaluating))
-  putStrLn (extractValue (trapError evaluated))
+  let evaluated = liftM show (readExpr (head args) >>= evaluating)
+    in putStrLn (extractValue (trapError evaluated))
