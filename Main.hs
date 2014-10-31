@@ -1,14 +1,18 @@
 module Main (main) where
 
 import System.Environment
-import Evaluation
-import LispError
-import Control.Monad
+--import Control.Monad
 
--- import qualified Control.Monad as CM
+--import Evaluation
+--import LispError
+import Repl
 
 main :: IO ()
 main = do
   args <- getArgs
-  let evaluated = liftM show (readExpr (head args) >>= evaluating)
-    in putStrLn (extractValue (trapError evaluated))
+  dispatch args
+
+dispatch :: [String] -> IO ()
+dispatch [] = runRepl
+dispatch [x] = evalAndPrint x
+dispatch _ = putStrLn "Program takes only 0 or 1 argument"
