@@ -14,5 +14,5 @@ main = do
 
 dispatch :: [String] -> IO ()
 dispatch [] = runRepl
-dispatch [x] = evalAndPrint x
+dispatch [arg] = runOne arg
 dispatch _ = putStrLn "Program takes only 0 or 1 argument"

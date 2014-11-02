@@ -8,6 +8,7 @@ import LispError
 import Parsing
 import Control.Monad.Error
 import Unpacker
+import Variables
 
 import qualified Text.ParserCombinators.Parsec as P
 
@@ -23,20 +24,26 @@ apply func args =
     ($ args)
     (lookup func primitives)
 
-evaluating :: LispVal -> ThrowsError LispVal
-evaluating val@(String _) = return val
-evaluating val@(Number _) = return val
-evaluating val@(Bool _) = return val
-evaluating (List [Atom "quote", val]) = return val
-evaluating (List [Atom "if", predicate, conseq, alt]) =
-  do result <- evaluating predicate
+evaluating :: Env -> LispVal -> IOThrowsError LispVal
+evaluating _ val@(String _) = return val
+evaluating _ val@(Number _) = return val
+evaluating _ val@(Bool _) = return val
+evaluating env (Atom tag) = getVar env tag
+evaluating _ (List [Atom "quote", val]) = return val
+evaluating env (List [Atom "if", predicate, conseq, alt]) =
+  do result <- evaluating env predicate
      case result of
-       Bool False -> evaluating alt
-       Bool True -> evaluating conseq
+       Bool False -> evaluating env alt
+       Bool True -> evaluating env conseq
+evaluating env (List [Atom "set!", Atom var, form]) =
+  evaluating env form >>= setVar env var
+evaluating env (List [Atom "define", Atom var, form]) =
+  evaluating env form >>= defineVar env var
+evaluating env (List (Atom func : args)) =
+  mapM (evaluating env) args >>= liftThrows . apply func
+evaluating _ badForm =
+  throwError (BadSpecialForm "Unrecognized special form" badForm)
 
-evaluating (List (Atom func : args)) = mapM evaluating args >>= apply func
-evaluating badForm = throwError (BadSpecialForm "Unrecognized special form" badForm)
---
 -- Primitives --
 
 primitives :: [(String, [LispVal] -> ThrowsError LispVal)]

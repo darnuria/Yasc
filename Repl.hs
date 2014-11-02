@@ -1,10 +1,13 @@
-module Repl (runRepl, evalAndPrint) where
+module Repl (
+            runRepl
+            , runOne
+            ) where
 
 import System.IO
 import Control.Monad
-import Evaluation
 
-import LispError
+import Evaluation
+import Variables
 
 flushStr :: String -> IO ()
 flushStr str = putStr str >> hFlush stdout
@@ -12,12 +15,13 @@ flushStr str = putStr str >> hFlush stdout
 readPrompt :: String -> IO String
 readPrompt prompt = flushStr prompt >> getLine
 
-evalString :: String -> IO String
-evalString expr = return (extractValue (trapError
-                         (liftM show (readExpr expr >>= evaluating))))
+evalString :: Env -> String -> IO String
+evalString env expr =
+  runIOThrows $ liftM show $ liftThrows (readExpr expr) >>=
+  evaluating env
 
-evalAndPrint :: String -> IO ()
-evalAndPrint expr = evalString expr >>= putStrLn
+evalAndPrint :: Env -> String -> IO ()
+evalAndPrint env expr = evalString env expr >>= putStrLn
 
 -- repeat until predicate is satified.
 -- name_ is a convention in haskell for expressing this behavior.
@@ -26,6 +30,11 @@ until_ predicate prompt action = do
   result <- prompt
   unless (predicate result) (action result >> until_ predicate prompt action)
 
+runOne :: String -> IO ()
+runOne expr = nullEnv >>= flip evalAndPrint expr
+
 runRepl :: IO ()
-runRepl = until_ (== "quit") (readPrompt "Scheme>>> ") evalAndPrint
+runRepl =
+  nullEnv >>= until_ (== "quit") (readPrompt "Scheme>>> ") .
+  evalAndPrint
 
