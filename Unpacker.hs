@@ -1,14 +1,13 @@
 {-# LANGUAGE ExistentialQuantification #-}
 module Unpacker (
-                Unpacker(AnyUnpacker),
-                unpackEquals,
-                unpackString,
-                unpackBool,
-                unpackNumber
-                ) where
+  Unpacker(AnyUnpacker),
+  unpackEquals,
+  unpackString,
+  unpackBool,
+  unpackNumber
+  ) where
 
-import LispValue
-import LispError
+import Lisp
 import Control.Monad.Error
 
 data Unpacker = forall a. Eq a => AnyUnpacker (LispVal -> ThrowsError a)

@@ -1,13 +1,13 @@
 module Repl (
-            runRepl
-            , runOne
-            ) where
+  runRepl
+  , runOne
+  ) where
 
 import System.IO
 import Control.Monad
 
 import Evaluation
-import Variables
+import Lisp
 
 flushStr :: String -> IO ()
 flushStr str = putStr str >> hFlush stdout
@@ -31,10 +31,10 @@ until_ predicate prompt action = do
   unless (predicate result) (action result >> until_ predicate prompt action)
 
 runOne :: String -> IO ()
-runOne expr = nullEnv >>= flip evalAndPrint expr
+runOne expr = primitiveBindings >>= flip evalAndPrint expr
 
 runRepl :: IO ()
 runRepl =
-  nullEnv >>= until_ (== "quit") (readPrompt "Scheme>>> ") .
+  primitiveBindings >>=  until_ (== "quit") (readPrompt "Scheme>>> ") .
   evalAndPrint
 

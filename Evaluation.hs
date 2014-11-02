@@ -1,15 +1,14 @@
 module Evaluation (
   evaluating,
-  readExpr
+  readExpr,
+  primitiveBindings
   ) where
 
-import LispValue
-import LispError
+import Lisp
 import Parsing
 import Control.Monad.Error
 import Unpacker
-import Variables
-
+import Data.Maybe(isNothing)
 import qualified Text.ParserCombinators.Parsec as P
 
 readExpr :: String -> ThrowsError LispVal
@@ -17,12 +16,28 @@ readExpr input = case P.parse parseExpr "lisp" input of
   Left err -> throwError (Parser err)
   Right val -> return val
 
-apply :: String -> [LispVal] -> ThrowsError LispVal
-apply func args =
-  let msg = "Unrecognized primitive function arguments"
-  in maybe (throwError $ NotFunction msg func)
-    ($ args)
-    (lookup func primitives)
+apply :: LispVal -> [LispVal] -> IOThrowsError LispVal
+apply (PrimitiveFunc func) args = liftThrows $ func args
+apply (Func params varargs body closure) args =
+  if num params /= num args && isNothing varargs
+    then throwError $ NumArgs (num params) args
+    else liftIO (bindVars closure $ zip params args) >>= bindVarArgs varargs >>= evalBody
+  where remainingArgs = drop (length params) args
+        num = toInteger . length
+        evalBody env = liftM last $ mapM (evaluating env) body
+        bindVarArgs arg env = case arg of
+          Just argName -> liftIO $ bindVars env [(argName, List remainingArgs)]
+          Nothing -> return env
+
+makeFunc :: (Monad m, Show a) => Maybe String -> Env -> [a] -> [LispVal] -> m LispVal
+makeFunc varargs env params' body' =
+  return $ Func (map show params') varargs body' env
+
+makeNormalFunc :: Env -> [LispVal] -> [LispVal] -> ErrorT LispError IO LispVal
+makeNormalFunc = makeFunc Nothing
+
+makeVarArgs :: LispVal -> Env -> [LispVal] -> [LispVal] -> ErrorT LispError IO LispVal
+makeVarArgs = makeFunc . Just . show
 
 evaluating :: Env -> LispVal -> IOThrowsError LispVal
 evaluating _ val@(String _) = return val
@@ -39,8 +54,20 @@ evaluating env (List [Atom "set!", Atom var, form]) =
   evaluating env form >>= setVar env var
 evaluating env (List [Atom "define", Atom var, form]) =
   evaluating env form >>= defineVar env var
-evaluating env (List (Atom func : args)) =
-  mapM (evaluating env) args >>= liftThrows . apply func
+evaluating env (List (Atom "define" : List (Atom var : params) : body)) =
+  makeNormalFunc env params body >>= defineVar env var
+evaluating env (List (Atom "define" : DottedList (Atom var : params) varargs : body)) =
+  makeVarArgs varargs env params body >>= defineVar env var
+evaluating env (List (Atom "lambda" : List params : body)) =
+  makeNormalFunc env params body
+evaluating env (List (Atom "lambda" : DottedList params varargs : body)) =
+  makeVarArgs varargs env params body
+evaluating env (List (Atom "lambda" : varargs@(Atom _) : body)) =
+  makeVarArgs varargs env [] body
+evaluating env (List (function : args)) = do
+  func <- evaluating env function
+  argVals <- mapM (evaluating env) args
+  apply func argVals
 evaluating _ badForm =
   throwError (BadSpecialForm "Unrecognized special form" badForm)
 
@@ -74,6 +101,11 @@ primitives = [("+", numericBinaryOp (+)),
              ("eq?", eqv),
              ("eqv?", eqv),
              ("equal?", equal)]
+
+primitiveBindings :: IO Env
+primitiveBindings =
+  nullEnv >>= flip bindVars (map makePrimitiveFunc primitives)
+  where makePrimitiveFunc (var, func) = (var, PrimitiveFunc func)
 
 numBoolBinaryOp :: (Integer -> Integer -> Bool) -> [LispVal] -> ThrowsError LispVal
 numBoolBinaryOp = boolBinaryOp unpackNumber

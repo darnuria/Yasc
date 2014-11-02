@@ -10,7 +10,7 @@ module Parsing (
 
 import qualified Text.ParserCombinators.Parsec as P
 import Text.Parsec.Char hiding (spaces)
-import LispValue
+import Lisp
 
 parseNumber :: P.Parser LispVal
 parseNumber = do

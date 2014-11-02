@@ -1,10 +1,7 @@
 module Main (main) where
 
 import System.Environment
---import Control.Monad
 
---import Evaluation
---import LispError
 import Repl
 
 main :: IO ()
