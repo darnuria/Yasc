@@ -1,11 +1,11 @@
 Name: yasc
-Version: 0.0.1
+Version: 0.1.0
 Description: Yet an other Scheme compilier
 Synopsis: yasc file
 License: MIT
 License-file: License.txt
 Author: Axel Viala
-Copyright: (c) 2014-2014 Axel Viala
+Copyright: © 2014-2014 Axel Viala
 Category: Development
 Maintainer: axel (dot) viala (At) darnuria (doteuh) eu
 homepage: https://github.com/darnuria/yasc
@@ -20,7 +20,11 @@ source-repository head
 Executable yasc
   Default-Language: Haskell2010
   Main-is: Main.hs
-  ghc-options: -Wall -fwarn-incomplete-patterns -fwarn-tabs -fwarn-incomplete-patterns
+  ghc-options: -Wall -W -fwarn-incomplete-patterns -fwarn-tabs
+                -fwarn-incomplete-patterns -fwarn-overlapping-patterns
+                -fwarn-incomplete-record-updates
+                -fwarn-monomorphism-restriction -fwarn-unused-do-bind
+                -fwarn-implicit-prelude
   Build-depends: base >= 4 && < 5,
                  parsec >= 3.1.7 && < 3.2,
                  mtl >= 2.1.2 && < 3
