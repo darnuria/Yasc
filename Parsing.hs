@@ -1,4 +1,5 @@
 module Parsing (
+  readOrThrow,
   parseNumber,
   parseList,
   parseExpr,
@@ -11,6 +12,13 @@ module Parsing (
 import qualified Text.ParserCombinators.Parsec as P
 import Text.Parsec.Char hiding (spaces)
 import Lisp
+
+import Control.Monad.Error
+
+readOrThrow :: P.Parser a -> String -> ThrowsError a
+readOrThrow parser input = case P.parse parser "Lisp" input of
+  Left err -> throwError $ Parser err
+  Right val -> return val
 
 parseNumber :: P.Parser LispVal
 parseNumber = do

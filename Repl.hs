@@ -30,8 +30,11 @@ until_ predicate prompt action = do
   result <- prompt
   unless (predicate result) (action result >> until_ predicate prompt action)
 
-runOne :: String -> IO ()
-runOne expr = primitiveBindings >>= flip evalAndPrint expr
+runOne :: [String] -> IO ()
+runOne args = do
+  env <- primitiveBindings >>= flip bindVars [("args", List (map String (drop 1 args)))]
+  runIOThrows (liftM show (evaluating env (List [Atom "load", String (head args)])))
+    >>= hPutStrLn stderr
 
 runRepl :: IO ()
 runRepl =
